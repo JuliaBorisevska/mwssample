@@ -2,21 +2,34 @@ package com.itechart.mwssample.service;
 
 
 import microsoft.exchange.webservices.data.core.ExchangeService;
+import microsoft.exchange.webservices.data.core.enumeration.availability.AvailabilityData;
+import microsoft.exchange.webservices.data.core.enumeration.misc.error.ServiceError;
 import microsoft.exchange.webservices.data.core.enumeration.property.WellKnownFolderName;
 import microsoft.exchange.webservices.data.core.exception.service.local.ServiceLocalException;
+import microsoft.exchange.webservices.data.core.response.AttendeeAvailability;
 import microsoft.exchange.webservices.data.core.service.folder.CalendarFolder;
 import microsoft.exchange.webservices.data.core.service.item.Appointment;
+import microsoft.exchange.webservices.data.misc.availability.AttendeeInfo;
+import microsoft.exchange.webservices.data.misc.availability.GetUserAvailabilityResults;
+import microsoft.exchange.webservices.data.misc.availability.TimeWindow;
+import microsoft.exchange.webservices.data.property.complex.EmailAddress;
+import microsoft.exchange.webservices.data.property.complex.EmailAddressCollection;
 import microsoft.exchange.webservices.data.property.complex.MessageBody;
+import microsoft.exchange.webservices.data.property.complex.availability.CalendarEvent;
 import microsoft.exchange.webservices.data.property.complex.recurrence.pattern.Recurrence;
 import microsoft.exchange.webservices.data.search.CalendarView;
 import microsoft.exchange.webservices.data.search.FindItemsResults;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 public class AppointmentService {
 
-    public void createAppointment(ExchangeService service, String subject, String body, Date startDate, Date endDate) throws Exception{
+    private final static String EMAIL_FOR_ROOM_LIST = "building.tolstogo@itechart-group.com";
+
+    public void createAppointment(ExchangeService service, String subject, String body, Date startDate, Date endDate, String location, String roomEmail) throws Exception{
         Appointment appointment = new  Appointment(service);
         appointment.setSubject(subject);
         appointment.setBody(MessageBody.getMessageBodyFromText(body));
@@ -24,7 +37,42 @@ public class AppointmentService {
         appointment.setStart(startDate);
         appointment.setEnd(endDate);
 
+        if (location!=null && roomEmail!=null){
+            appointment.setLocation(location);
+            appointment.getRequiredAttendees().add(roomEmail);
+
+        }
         appointment.save();
+
+        appointment.load();
+        Thread.sleep(100000);
+        System.out.println(appointment.getMyResponseType());
+    }
+
+    public void printRoomEvents(ExchangeService service, String roomEmail, Date startDate, Date endDate) throws Exception {
+        List<AttendeeInfo> attendees = new ArrayList<AttendeeInfo>();
+        attendees.add(new AttendeeInfo(roomEmail));
+
+        GetUserAvailabilityResults results = service.getUserAvailability(
+                attendees,
+                new TimeWindow(startDate, endDate),
+                AvailabilityData.FreeBusyAndSuggestions);
+
+        for (AttendeeAvailability attendeeAvailability : results.getAttendeesAvailability()) {
+            System.out.println("Availability for " + attendees.get(0).getSmtpAddress());
+            if (attendeeAvailability.getErrorCode() == ServiceError.NoError) {
+            for (CalendarEvent calendarEvent : attendeeAvailability.getCalendarEvents()) {
+                System.out.println("Calendar event");
+                System.out.println("  Start time: " + calendarEvent.getStartTime().toString());
+                System.out.println("  End time: " + calendarEvent.getEndTime().toString());
+
+                if (calendarEvent.getDetails() != null)
+                {
+                    System.out.println("  Subject: " + calendarEvent.getDetails().getSubject());
+                }
+            }
+            }
+        }
     }
 
     public void createRecurringAppointment(ExchangeService service, String subject, String body,
@@ -62,6 +110,17 @@ public class AppointmentService {
         }
     }
 
+    public Collection<EmailAddress> getOrganizationRooms(ExchangeService service)throws Exception{
+        return service.getRooms(new EmailAddress(EMAIL_FOR_ROOM_LIST));
+    }
 
+    public void printRoomList(ExchangeService service) throws Exception {
+        for (EmailAddress email : getOrganizationRooms(service)) {
+            System.out.println("\nROOM:");
+            System.out.println("Name: " + email.getName());
+            System.out.println("Address: " + email.getAddress());
+            System.out.println("Routing type: " + email.getRoutingType());
+        }
+    }
 
 }

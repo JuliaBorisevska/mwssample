@@ -32,8 +32,8 @@ public class App
 
             AppointmentService appointmentService = new AppointmentService();
             SimpleDateFormat formatter = new  SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Date startDate = formatter.parse("2015-10-05 11:00:00");
-            Date endDate = formatter.parse("2015-10-05 11:30:00");
+            Date startDate = formatter.parse("2015-10-06 16:00:00");
+            Date endDate = formatter.parse("2015-10-06 16:30:00");
 
             //appointmentService.createAppointment(service, "JAVA TEST Appointment","Test Body Msg",startDate,endDate);
             for (EmailAddress address : appointmentService.getOrganizationRooms(service)){

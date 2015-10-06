@@ -39,14 +39,18 @@ public class AppointmentService {
 
         if (location!=null && roomEmail!=null){
             appointment.setLocation(location);
-            appointment.getRequiredAttendees().add(roomEmail);
-
+            appointment.getResources().add(roomEmail);
         }
         appointment.save();
 
+        Thread.sleep(10000);
         appointment.load();
-        Thread.sleep(100000);
-        System.out.println(appointment.getMyResponseType());
+
+        for (int i = 0; i < appointment.getResources().getCount(); i++)
+        {
+            System.out.println("Resource attendee - " + appointment.getResources().getItems().get(i).getAddress() + ": "
+                    + appointment.getResources().getItems().get(i).getResponseType().name());
+        }
     }
 
     public void printRoomEvents(ExchangeService service, String roomEmail, Date startDate, Date endDate) throws Exception {

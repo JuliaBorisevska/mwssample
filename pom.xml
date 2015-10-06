@@ -3,11 +3,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.itechart</groupId>
-  <artifactId>ewssample</artifactId>
+  <artifactId>mwssample</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>ewssample</name>
+  <name>mwssample</name>
   <url>http://maven.apache.org</url>
 
   <properties>
